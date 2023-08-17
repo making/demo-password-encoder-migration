@@ -4,8 +4,8 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
-import org.springframework.security.crypto.password.DelegatingPasswordEncoder;
+import org.springframework.security.crypto.codec.Hex;
+import org.springframework.security.crypto.codec.Utf8;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.context.DelegatingSecurityContextRepository;
@@ -13,7 +13,9 @@ import org.springframework.security.web.context.HttpSessionSecurityContextReposi
 import org.springframework.security.web.context.RequestAttributeSecurityContextRepository;
 import org.springframework.security.web.context.SecurityContextRepository;
 
-import java.util.Map;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
+import java.util.Objects;
 
 @Configuration
 public class SecurityConfig {
@@ -30,10 +32,24 @@ public class SecurityConfig {
 
 	@Bean
 	public PasswordEncoder passwordEncoder() {
-		String idForEncode = "bcrypt";
-		DelegatingPasswordEncoder passwordEncoder = new DelegatingPasswordEncoder(idForEncode,
-				Map.of(idForEncode, new BCryptPasswordEncoder()));
-		return passwordEncoder;
+		PasswordEncoder legacyMd5Encoder = new PasswordEncoder() {
+			@Override
+			public String encode(CharSequence rawPassword) {
+				try {
+					MessageDigest messageDigest = MessageDigest.getInstance("MD5");
+					return new String(Hex.encode(messageDigest.digest(Utf8.encode(rawPassword))));
+				}
+				catch (NoSuchAlgorithmException e) {
+					throw new RuntimeException(e);
+				}
+			}
+
+			@Override
+			public boolean matches(CharSequence rawPassword, String encodedPassword) {
+				return Objects.equals(this.encode(rawPassword), encodedPassword);
+			}
+		};
+		return legacyMd5Encoder;
 	}
 
 	@Bean
