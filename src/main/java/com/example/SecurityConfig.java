@@ -6,7 +6,9 @@ import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.crypto.codec.Hex;
 import org.springframework.security.crypto.codec.Utf8;
+import org.springframework.security.crypto.password.DelegatingPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.crypto.password.Pbkdf2PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.context.DelegatingSecurityContextRepository;
 import org.springframework.security.web.context.HttpSessionSecurityContextRepository;
@@ -15,6 +17,7 @@ import org.springframework.security.web.context.SecurityContextRepository;
 
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.util.Map;
 import java.util.Objects;
 
 @Configuration
@@ -49,7 +52,11 @@ public class SecurityConfig {
 				return Objects.equals(this.encode(rawPassword), encodedPassword);
 			}
 		};
-		return legacyMd5Encoder;
+		String idForEncode = "pbkdf2@SpringSecurity_v5_8";
+		DelegatingPasswordEncoder passwordEncoder = new DelegatingPasswordEncoder(idForEncode, //
+				Map.of(idForEncode, Pbkdf2PasswordEncoder.defaultsForSpringSecurity_v5_8()));
+		passwordEncoder.setDefaultPasswordEncoderForMatches(legacyMd5Encoder);
+		return passwordEncoder;
 	}
 
 	@Bean
