@@ -6,8 +6,8 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 @SpringBootApplication
 public class DemoPasswordEncoderMigrationApplication {
 
-    public static void main(String[] args) {
-        SpringApplication.run(DemoPasswordEncoderMigrationApplication.class, args);
-    }
+	public static void main(String[] args) {
+		SpringApplication.run(DemoPasswordEncoderMigrationApplication.class, args);
+	}
 
 }
