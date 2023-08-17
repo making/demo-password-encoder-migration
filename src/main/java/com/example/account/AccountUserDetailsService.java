@@ -4,12 +4,13 @@ import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.jdbc.core.DataClassRowMapper;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UserDetailsPasswordService;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 
 @Service
-public class AccountUserDetailsService implements UserDetailsService {
+public class AccountUserDetailsService implements UserDetailsService, UserDetailsPasswordService {
 
 	private final JdbcTemplate jdbcTemplate;
 
@@ -28,6 +29,12 @@ public class AccountUserDetailsService implements UserDetailsService {
 		catch (EmptyResultDataAccessException e) {
 			throw new UsernameNotFoundException("user not found", e);
 		}
+	}
+
+	@Override
+	public UserDetails updatePassword(UserDetails user, String newPassword) {
+		this.jdbcTemplate.update("UPDATE account SET password = ? WHERE username = ?", newPassword, user.getUsername());
+		return new AccountUserDetails(new Account(user.getUsername(), newPassword));
 	}
 
 }
